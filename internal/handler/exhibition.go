@@ -25,17 +25,33 @@ type GradeProjectReq struct {
 
 func SubmitProject(w http.ResponseWriter, r *http.Request) {
 	userCtx, _ := lmodel.UserFromContext(r.Context())
-	// TODO
 
-	// TODO
+	var req SubmitProjectReq
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	projectID, err := db.CreateProject(r.Context(), req.Title, req.Description, userCtx.ID)
+	if err != nil {
+		http.Error(w, "Failed to create project", http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(map[string]int{"project_id": projectID})
 }
 
 func ListProjects(w http.ResponseWriter, r *http.Request) {
-	// TODO
+	projects, err := db.GetAllProjects(r.Context())
+	if err != nil {
+		http.Error(w, "Failed to fetch projects", http.StatusInternalServerError)
+		return
+	}
 
-	// TODO
+	if projects == nil {
+		projects = []lmodel.Project{}
+	}
 
 	json.NewEncoder(w).Encode(&projects)
 }
